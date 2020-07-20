@@ -1,13 +1,56 @@
-"""CPU functionality."""
+"""
+1. Register Table
+"""
+PC_IDX      = 0
+IR_IDX      = 1
+MAR_IDX     = 2
+MDR_IDX     = 3
+FL_IDX      = 4
+IM_IDX      = 5
+IS_IDX      = 6
+SP_IDX      = 7
+
+"""
+2. Instructions Table
+"""
+HLT         = 0b00000001
+
+# pending
+LDI         = 0b00000001
+PRN         = 0b00000001
+# HLT         = 0b00000001
+
+
+def create_8bit_register():
+  return [0] * 8
+
+
+"""
+CPU functionality.
+
+
+"""
 
 import sys
+# from reg import *
+# import reg
+
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        """Construct a new CPU."""
-        pass
+        # Registers
+        self.reg = [0] * 8  # this is the CPU's register
+        # self.reg[MAR_IDX]
+
+
+        self.ram = [0] * 0b11111111
+        self.reg = [0] * 8
+        self.pc = 0
+
+    def get_MAR(self):
+        return cpu.reg[MAR_IDX]
 
     def load(self):
         """Load a program into memory."""
@@ -61,5 +104,53 @@ class CPU:
         print()
 
     def run(self):
-        """Run the CPU."""
-        pass
+        PC = self.reg[PC_IDX]
+        IR = PC
+        self.reg[IR_IDX] = IR
+
+        instruction = self.ram_read(PC)
+        operand_a = self.ram_read(PC+1)
+        operand_b = self.ram_read(PC+2)
+
+        running = True
+        while running:
+
+            if instruction == HLT:
+                print("exiting...")
+                running = False
+
+            elif instruction == 1:
+                pass
+
+            else:
+                print("Unknown opcode")
+
+
+
+
+    def ram_read(self, address = None):
+        if not address:
+            address = self.reg[MAR_IDX]
+
+        return self.ram[address]
+
+    def ram_write(self, address = None, value = None):
+        if not address:
+            address = self.reg[MAR_IDX]
+        if not value:
+            value = self.reg[MDR_IDX]
+
+        self.ram[address] = value
+
+
+if __name__ == "__main__":
+    cpu = CPU()
+    print(len(cpu.ram))
+
+    # test
+    # self.MAR = self.reg[3]
+    # self.MDR = self.reg[4]
+
+    cpu.ram_write()
+    print(cpu.ram[3])
+
