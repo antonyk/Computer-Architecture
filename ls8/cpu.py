@@ -1,13 +1,32 @@
-"""CPU functionality."""
+"""
+CPU functionality.
+
+"""
 
 import sys
+# import ops
+from ops import *
+# from reg import *
+# import reg
+
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        """Construct a new CPU."""
-        pass
+        # Internal Registers
+        self.pc     = 0b00000000
+        self.ir     = NOP
+        self.mar    = 0b00000000
+        self.mdr    = 0b00000000
+        self.fl     = 0b00000000  # 00000LGE - only last 3 bits matter
+
+        # General Purpose Registers
+        self.reg = [0] * 8  # this is the CPU's register
+
+        # Memory
+        self.ram = [0] * 265 # size of the computer's memory
+
 
     def load(self):
         """Load a program into memory."""
@@ -40,19 +59,23 @@ class CPU:
         else:
             raise Exception("Unsupported ALU operation")
 
-    def trace(self):
+    def trace(self, location="not set"):
         """
         Handy function to print out the CPU state. You might want to call this
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
+        print(f"[TRACE] (INT) PC: %02X, IR: %02X | RAM: %02X %02X %02X %02X | REG:" % (
             self.pc,
+            self.ir,
+            # self.mar,
+            # self.mdr,
             #self.fl,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
+            self.ram_read(self.pc + 2),
+            self.ram_read(self.pc + 3),
         ), end='')
 
         for i in range(8):
@@ -61,5 +84,69 @@ class CPU:
         print()
 
     def run(self):
-        """Run the CPU."""
-        pass
+        # running = True  # maybe use break to halt??
+        while True:
+            # self.trace("Loop Start")
+
+            self.ir = self.ram_read(self.pc)
+            # self.reg[2] = self.ram_read(self.pc+1)
+            # self.reg[3] = self.ram_read(self.pc+2)
+            
+            # increment pc after reach of its reads, thus moving the machine's head
+            # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
+            self.trace("If Start")
+
+            if self.ir == HLT:
+                print("HALT called! Exiting...")
+                break
+                # running = False
+
+            elif self.ir == LDI:
+                # print(f"LDI: {self.ir} (self.ir), {LDI} (LDI)")
+                # not ideal; should only be read into general purpose registers if needed
+
+                # do the ram reading here ??
+                self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
+                self.pc += 3 # should be based on the instruction's top 2 bits
+
+            elif self.ir == PRN:
+                # print(f"PRN: {self.ir} (self.ir), {PRN} (PRN)")
+                print(self.reg[self.ram_read(self.pc+1)])
+                self.pc += 2
+
+            else:
+                print("Unknown opcode")
+                break
+                # running = False
+
+            # print(f"POST: {self.ir} (self.ir), {PRN} (PRN)")
+            # self.trace()
+
+
+    def ram_read(self, address = None):
+        if address is not None:
+            self.mar = address
+
+        self.mdr = self.ram[self.mar]
+        return self.mdr
+
+    def ram_write(self, address = None, value = None):
+        if address is not None:
+            self.mar = address
+        if value is not None:
+            self.mdr = value
+
+        self.ram[self.mar] = self.mdr
+
+
+if __name__ == "__main__":
+    cpu = CPU()
+    print(len(cpu.ram))
+
+    # test
+    # self.MAR = self.reg[3]
+    # self.MDR = self.reg[4]
+
+    cpu.ram_write()
+    print(cpu.ram[3])
+
