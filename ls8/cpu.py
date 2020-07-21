@@ -114,6 +114,10 @@ class CPU:
                 print(self.reg[self.ram_read(self.pc+1)])
                 self.pc += 2
 
+            elif self.ir == NOP:
+                print("NOP Encountered. Exiting...")
+                break
+
             else:
                 print("Unknown opcode")
                 break
