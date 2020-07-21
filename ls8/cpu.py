@@ -1,37 +1,11 @@
 """
-1. Register Table
-"""
-PC_IDX      = 0
-IR_IDX      = 1
-MAR_IDX     = 2
-MDR_IDX     = 3
-FL_IDX      = 4
-IM_IDX      = 5
-IS_IDX      = 6
-SP_IDX      = 7
-
-"""
-2. Instructions Table
-"""
-HLT         = 0b00000001
-
-# pending
-LDI         = 0b00000001
-PRN         = 0b00000001
-# HLT         = 0b00000001
-
-
-def create_8bit_register():
-  return [0] * 8
-
-
-"""
 CPU functionality.
-
 
 """
 
 import sys
+# import ops
+from ops import *
 # from reg import *
 # import reg
 
@@ -40,17 +14,19 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        # Registers
+        # Internal Registers
+        self.pc     = 0b00000000
+        self.ir     = NOP
+        self.mar    = 0b00000000
+        self.mdr    = 0b00000000
+        self.fl     = 0b00000000  # 00000LGE - only last 3 bits matter
+
+        # General Purpose Registers
         self.reg = [0] * 8  # this is the CPU's register
-        # self.reg[MAR_IDX]
 
+        # Memory
+        self.ram = [0] * 265 # size of the computer's memory
 
-        self.ram = [0] * 0b11111111
-        self.reg = [0] * 8
-        self.pc = 0
-
-    def get_MAR(self):
-        return cpu.reg[MAR_IDX]
 
     def load(self):
         """Load a program into memory."""
@@ -83,19 +59,23 @@ class CPU:
         else:
             raise Exception("Unsupported ALU operation")
 
-    def trace(self):
+    def trace(self, location="not set"):
         """
         Handy function to print out the CPU state. You might want to call this
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
+        print(f"[TRACE] (INT) PC: %02X, IR: %02X | RAM: %02X %02X %02X %02X | REG:" % (
             self.pc,
+            self.ir,
+            # self.mar,
+            # self.mdr,
             #self.fl,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
+            self.ram_read(self.pc + 2),
+            self.ram_read(self.pc + 3),
         ), end='')
 
         for i in range(8):
@@ -104,43 +84,59 @@ class CPU:
         print()
 
     def run(self):
-        PC = self.reg[PC_IDX]
-        IR = PC
-        self.reg[IR_IDX] = IR
+        # running = True  # maybe use break to halt??
+        while True:
+            # self.trace("Loop Start")
 
-        instruction = self.ram_read(PC)
-        operand_a = self.ram_read(PC+1)
-        operand_b = self.ram_read(PC+2)
+            self.ir = self.ram_read(self.pc)
+            # self.reg[2] = self.ram_read(self.pc+1)
+            # self.reg[3] = self.ram_read(self.pc+2)
+            
+            # increment pc after reach of its reads, thus moving the machine's head
+            # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
+            self.trace("If Start")
 
-        running = True
-        while running:
+            if self.ir == HLT:
+                print("HALT called! Exiting...")
+                break
+                # running = False
 
-            if instruction == HLT:
-                print("exiting...")
-                running = False
+            elif self.ir == LDI:
+                # print(f"LDI: {self.ir} (self.ir), {LDI} (LDI)")
+                # not ideal; should only be read into general purpose registers if needed
 
-            elif instruction == 1:
-                pass
+                # do the ram reading here ??
+                self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
+                self.pc += 3 # should be based on the instruction's top 2 bits
+
+            elif self.ir == PRN:
+                # print(f"PRN: {self.ir} (self.ir), {PRN} (PRN)")
+                print(self.reg[self.ram_read(self.pc+1)])
+                self.pc += 2
 
             else:
                 print("Unknown opcode")
+                break
+                # running = False
 
-
+            # print(f"POST: {self.ir} (self.ir), {PRN} (PRN)")
+            # self.trace()
 
 
     def ram_read(self, address = None):
-        if not address:
-            address = self.reg[MAR_IDX]
+        if address is not None:
+            self.mar = address
 
-        return self.ram[address]
+        self.mdr = self.ram[self.mar]
+        return self.mdr
 
     def ram_write(self, address = None, value = None):
-        if not address:
-            address = self.reg[MAR_IDX]
-        if not value:
-            value = self.reg[MDR_IDX]
+        if address is not None:
+            self.mar = address
+        if value is not None:
+            self.mdr = value
 
-        self.ram[address] = value
+        self.ram[self.mar] = self.mdr
 
 
 if __name__ == "__main__":
