@@ -87,7 +87,6 @@ class CPU:
         # running = True  # maybe use break to halt??
         while True:
             # self.trace("Loop Start")
-
             self.ir = self.ram_read(self.pc)
             # self.reg[2] = self.ram_read(self.pc+1)
             # self.reg[3] = self.ram_read(self.pc+2)
@@ -99,20 +98,14 @@ class CPU:
             if self.ir == HLT:
                 print("HALT called! Exiting...")
                 break
-                # running = False
 
             elif self.ir == LDI:
-                # print(f"LDI: {self.ir} (self.ir), {LDI} (LDI)")
                 # not ideal; should only be read into general purpose registers if needed
-
                 # do the ram reading here ??
                 self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
-                self.pc += 3 # should be based on the instruction's top 2 bits
 
             elif self.ir == PRN:
-                # print(f"PRN: {self.ir} (self.ir), {PRN} (PRN)")
                 print(self.reg[self.ram_read(self.pc+1)])
-                self.pc += 2
 
             elif self.ir == NOP:
                 print("NOP Encountered. Exiting...")
@@ -121,10 +114,8 @@ class CPU:
             else:
                 print("Unknown opcode")
                 break
-                # running = False
 
-            # print(f"POST: {self.ir} (self.ir), {PRN} (PRN)")
-            # self.trace()
+            self.pc += ((self.ir & 0b11000000) >> 6) + 1
 
 
     def ram_read(self, address = None):
