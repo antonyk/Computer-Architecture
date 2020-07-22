@@ -4,7 +4,7 @@ CPU functionality.
 """
 
 import sys
-# import ops
+import ops
 from ops import *
 # from reg import *
 # import reg
@@ -27,9 +27,16 @@ class CPU:
         # Memory
         self.ram = [0] * 265 # size of the computer's memory
 
+        # Instructions
+        self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
+        for key in ops_table:
+            idx = ops_table[key] & 0b00111111
+            self.inst[idx] = key.lower()
 
-    def load(self, program = None):
+    def load(self, program = None, second="Hello"):
         """Load a program into memory."""
+
+        # print(second)
 
         if program == None:
             # Use hardcoded program:
@@ -47,7 +54,6 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -94,9 +100,19 @@ class CPU:
             # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
             self.trace("If Start")
 
-            if self.ir == HLT:
-                print("HALT called! Exiting...")
-                break
+            operands = []
+            for i in range(((self.ir & 0b11000000) >> 6)):
+                operands.append(self.ram_read(self.pc+1+i))
+            
+            if self.ir == HLT and self.inst[self.ir]:  # optional error checking
+                print(operands)
+                print(self.inst[self.ir])
+                getattr(ops, self.inst[self.ir])(*operands)
+                # self.inst[self.ir](*operands)
+
+            # if self.ir == HLT:
+            #     print("HALT called! Exiting...")
+            #     break
 
             elif self.ir == LDI:
                 # not ideal; should only be read into general purpose registers if needed
@@ -104,7 +120,7 @@ class CPU:
                 self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
 
             elif self.ir == MUL:
-                self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] + self.reg[self.ram_read(self.pc+2)]
+                self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] * self.reg[self.ram_read(self.pc+2)]
 
             elif self.ir == PRN:
                 print(self.reg[self.ram_read(self.pc+1)])

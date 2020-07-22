@@ -71,9 +71,8 @@ if filename:
     sys.exit(1)
 
 else:
-  cpu.load()
+  cpu.load(second="Hello TJ!")
 
 
 cpu.run()
-
 
