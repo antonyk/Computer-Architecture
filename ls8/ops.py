@@ -2,6 +2,11 @@
 ----------------------
 OPCODES (Instructions)
 ----------------------
+"""
+
+opcodes = [0] * 64
+
+"""
 1. Basic
 """
 # No operation. Do nothing for this instruction.
