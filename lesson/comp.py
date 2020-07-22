@@ -35,6 +35,9 @@ memory = [
 pc = 0  # Program Counter, index into memory of the current instruction
         # AKA a pointer to the current instruction
 
+SP = 7
+register[SP] = 0xF4 # init R7 with stack pointer
+
 running = True
 
 while running:
@@ -66,9 +69,31 @@ while running:
 
     pc += offset
 
+
+  elif instruction == 5:  # PUSH
+    # decrement stack ptr
+    register[SP] -= 1
+    register[SP] &= 0xff  # protect against out of bounds; cause a wrap around
+
+    # get register value
+    reg_num = memory[pc+1]
+    value = register[reg_num]
+
+    # store in mem
+    address_to_push_to = register[SP]
+    memory[address_to_push_to] = value
+
+    pc += 2
+
+  elif instruction == 6:
+    # pop
+    pass
+
   else:
     print(f"Unknown instruction: {instruction}")
 
   
 # print(register)
 # print(memory)
+
+
