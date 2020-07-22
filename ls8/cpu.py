@@ -103,12 +103,14 @@ class CPU:
                 # do the ram reading here ??
                 self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
 
+            elif self.ir == MUL:
+                self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] + self.reg[self.ram_read(self.pc+2)]
+
             elif self.ir == PRN:
                 print(self.reg[self.ram_read(self.pc+1)])
 
             elif self.ir == NOP:
-                print("NOP Encountered. Exiting...")
-                break
+                print("NOP Encountered. Skipping...")
 
             else:
                 print("Unknown opcode")

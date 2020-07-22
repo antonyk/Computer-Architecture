@@ -33,7 +33,7 @@ if len(sys.argv) > 1:
       pass # skip invalid ones
 
 
-print(cliargs)
+print("CLI ARGS:", cliargs)
 
 cpu = CPU()
 
