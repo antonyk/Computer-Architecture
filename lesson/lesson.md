@@ -69,3 +69,4 @@ mega == mebi == 1048576  == 2^20
 
 
 
+num of operands = (instruction value & 0b11000000) >> 6
