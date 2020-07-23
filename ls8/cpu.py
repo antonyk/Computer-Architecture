@@ -43,7 +43,7 @@ class CPU:
         self.iset = Instructions(self)
         # self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
         for key in opcodes:
-            self.ops[opcodes[key]] = getattr(self.iset, key.lower(), 0)
+            self.ops[opcodes[key]] = getattr(self.iset, "handle_" + key, 0)
 
         # for key in opcodes:
         #     opcode = opcodes[key]

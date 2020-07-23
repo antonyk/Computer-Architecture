@@ -304,7 +304,7 @@ class Instructions():
   # 00000000
   # 00
   NOP         = 0b00000000
-  def nop(self):
+  def handle_NOP(self):
     print("NOP Encountered. Skipping...")
 
   # HLT
@@ -313,7 +313,7 @@ class Instructions():
   # 00000001 
   # 01
   HLT         = 0b00000001
-  def hlt(self):
+  def handle_HLT(self):
     # print("HALT called! Exiting...")
     import sys
     sys.exit("HALT called! BRANCH Exiting...")
@@ -325,8 +325,8 @@ class Instructions():
   # 01010010 00000rrr
   # 52 0r
   INT         = 0b01010010
-  def int(self, r1):
-    pass
+  # def int(self, r1):
+  #   pass
 
   # IRET
   # Return from an interrupt handler.
@@ -339,8 +339,8 @@ class Instructions():
   # 00010011
   # 13
   IRET        = 0b00010011
-  def iret(self):
-    pass
+  # def iret(self):
+  #   pass
 
   # CALL register
   # Calls a subroutine (function) at the address stored in the register.
@@ -350,8 +350,8 @@ class Instructions():
   # 01010000 00000rrr
   # 50 0r
   CALL        = 0b01010000
-  def call(self, r1):
-    pass
+  # def call(self, r1):
+  #   pass
 
   """
   2. Memory Read/Write
@@ -363,8 +363,8 @@ class Instructions():
   # 10000011 00000aaa 00000bbb
   # 83 0a 0b
   LD          = 0b10000011
-  def ld(self, r1, r2):
-    pass
+  # def ld(self, r1, r2):
+  #   pass
 
   # LDI register immediate
   # Set the value of a register to an integer.
@@ -372,7 +372,7 @@ class Instructions():
   # 10000010 00000rrr iiiiiiii
   # 82 0r ii
   LDI         = 0b10000010
-  def ldi(self, r1, r2):
+  def handle_LDI(self, r1, r2):
     # print("from ops; operands: ", args)
     # self.cpu.reg[args[0]] = args[1]
     # print("LDI arguments: ", r1, r2)
@@ -386,8 +386,8 @@ class Instructions():
   # 10000100 00000aaa 00000bbb
   # 84 0a 0b
   ST          = 0b10000100
-  def st(self, r1, r2):
-    pass
+  # def st(self, r1, r2):
+  #   pass
 
   """
   3. Stack Manipulation
@@ -400,7 +400,7 @@ class Instructions():
   # 01000101 00000rrr
   # 45 0r
   PUSH        = 0b01000101
-  def push(self, r1):
+  def handle_PUSH(self, r1):
     self.cpu.dec_sp()
     # self.cpu.reg[7] = (self.cpu.reg[7] - 1) & 0xff
     self.cpu.ram_write(self.cpu.get_sp(), r1)
@@ -421,7 +421,7 @@ class Instructions():
   # 01000110 00000rrr
   # 46 0r
   POP         = 0b01000110
-  def pop(self, r1):
+  def handle_POP(self, r1):
     self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
     self.cpu.inc_sp()
     # self.cpu.reg[7] = (self.cpu.reg[7] + 1) & 0xff
@@ -495,7 +495,7 @@ class Instructions():
   # 01000111 00000rrr
   # 47 0r
   PRN         = 0b01000111
-  def prn(self, r1):
+  def handle_PRN(self, r1):
     print(self.cpu.reg[r1])
 
   """
@@ -508,6 +508,8 @@ class Instructions():
   # 10100000 00000aaa 00000bbb
   # A0 0a 0b
   ADD         = 0b10100000
+  def handle_ADD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] + self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # AND registerA registerB
@@ -516,6 +518,8 @@ class Instructions():
   # 10101000 00000aaa 00000bbb
   # A8 0a 0b
   AND         = 0b10101000
+  def handle_AND(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] & self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # CMP registerA registerB
@@ -569,7 +573,7 @@ class Instructions():
   # 10100010 00000aaa 00000bbb
   # A2 0a 0b
   MUL         = 0b10100010
-  def mul(self, r1, r2):
+  def handle_MUL(self, r1, r2):
     self.cpu.reg[r1] = self.cpu.reg[r1] * self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
