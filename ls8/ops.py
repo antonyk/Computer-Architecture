@@ -487,6 +487,8 @@ class Instructions():
   # 01001000 00000rrr
   # 48 0r
   PRA         = 0b01001000
+  def handle_PRA(self, r1):
+    print(chr(self.cpu.reg[r1]))
 
   # PRN register pseudo-instruction
   # Print numeric value stored in the given register.
@@ -509,7 +511,7 @@ class Instructions():
   # A0 0a 0b
   ADD         = 0b10100000
   def handle_ADD(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] + self.cpu.reg[r2]
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + self.cpu.reg[r2]) & 0xff
 
   # This is an instruction handled by the ALU.
   # AND registerA registerB
@@ -539,6 +541,8 @@ class Instructions():
   # 01100110 00000rrr
   # 66 0r
   DEC         = 0b01100110
+  def handle_DEC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
 
   # This is an instruction handled by the ALU.
   # DIV registerA registerB
@@ -556,6 +560,8 @@ class Instructions():
   # 01100101 00000rrr
   # 65 0r
   INC         = 0b01100101
+  def handle_INC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
 
   # This is an instruction handled by the ALU.
   # MOD registerA registerB
@@ -565,6 +571,8 @@ class Instructions():
   # 10100100 00000aaa 00000bbb
   # A4 0a 0b
   MOD         = 0b10100100
+  def handle_MOD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] % self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # MUL registerA registerB
@@ -574,7 +582,7 @@ class Instructions():
   # A2 0a 0b
   MUL         = 0b10100010
   def handle_MUL(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] * self.cpu.reg[r2]
+    self.cpu.reg[r1] = (self.cpu.reg[r1] * self.cpu.reg[r2]) & 0xff
 
   # This is an instruction handled by the ALU.
   # NOT register
@@ -583,6 +591,8 @@ class Instructions():
   # 01101001 00000rrr
   # 69 0r
   NOT         = 0b01101001
+  def handle_NOT(self, r1):
+    self.cpu.reg[r1] = ~self.cpu.reg[r1]
 
   # This is an instruction handled by the ALU.
   # OR registerA registerB
@@ -591,18 +601,24 @@ class Instructions():
   # 10101010 00000aaa 00000bbb
   # AA 0a 0b
   OR          = 0b10101010
+  def handle_OR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] | self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # Shift the value in registerA left by the number of bits specified in registerB, filling the low bits with 0.
   # 10101100 00000aaa 00000bbb
   # AC 0a 0b
   SHL         = 0b10101100
+  def handle_SHL(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] << self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # Shift the value in registerA right by the number of bits specified in registerB, filling the high bits with 0.
   # 10101101 00000aaa 00000bbb
   # AD 0a 0b
   SHR         = 0b10101101
+  def handle_SHR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] >> self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # SUB registerA registerB
@@ -611,6 +627,8 @@ class Instructions():
   # 10100001 00000aaa 00000bbb
   # A1 0a 0b
   SUB         = 0b10100001
+  def handle_SUB(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] - self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # XOR registerA registerB
@@ -619,6 +637,9 @@ class Instructions():
   # 10101011 00000aaa 00000bbb
   # AB 0a 0b
   XOR         = 0b10101011
+  def handle_XOR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] ^ self.cpu.reg[r2]
+
 
   """
   END OPCODE TABLE 
