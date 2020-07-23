@@ -402,8 +402,7 @@ class Instructions():
   PUSH        = 0b01000101
   def handle_PUSH(self, r1):
     self.cpu.dec_sp()
-    # self.cpu.reg[7] = (self.cpu.reg[7] - 1) & 0xff
-    self.cpu.ram_write(self.cpu.get_sp(), r1)
+    self.cpu.ram_write(self.cpu.get_sp(), self.cpu.reg[r1])
 
   # RET
   # Return from subroutine.
@@ -424,7 +423,6 @@ class Instructions():
   def handle_POP(self, r1):
     self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
     self.cpu.inc_sp()
-    # self.cpu.reg[7] = (self.cpu.reg[7] + 1) & 0xff
 
   """
   4. Jump & Conditional Jump

@@ -127,7 +127,8 @@ class CPU:
             
             # increment pc after reach of its reads, thus moving the machine's head
             # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
-            self.trace("If Start")
+
+            # self.trace("If Start")
 
             # build the arguments array based on the top 2 bits
             args = []
