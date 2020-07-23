@@ -363,8 +363,8 @@ class Instructions():
   # 10000011 00000aaa 00000bbb
   # 83 0a 0b
   LD          = 0b10000011
-  # def ld(self, r1, r2):
-  #   pass
+  def handle_LD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.reg[r2])
 
   # LDI register immediate
   # Set the value of a register to an integer.
@@ -373,11 +373,7 @@ class Instructions():
   # 82 0r ii
   LDI         = 0b10000010
   def handle_LDI(self, r1, r2):
-    # print("from ops; operands: ", args)
-    # self.cpu.reg[args[0]] = args[1]
-    # print("LDI arguments: ", r1, r2)
     self.cpu.reg[r1] = r2
-
 
   # ST registerA registerB
   # Store value in registerB in the address stored in registerA.
@@ -386,8 +382,8 @@ class Instructions():
   # 10000100 00000aaa 00000bbb
   # 84 0a 0b
   ST          = 0b10000100
-  # def st(self, r1, r2):
-  #   pass
+  def handle_ST(self, r1, r2):
+    self.cpu.ram_write(self.cpu.reg[r1], self.cpu.reg[r2])
 
   """
   3. Stack Manipulation
