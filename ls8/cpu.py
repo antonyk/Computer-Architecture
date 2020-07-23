@@ -29,15 +29,38 @@ class CPU:
         self.reg = [0] * 8  # this is the CPU's register
         self.reg[7] = 0xf4
 
+
         # Memory
         self.ram = [0] * 265 # size of the computer's memory
 
         # Instructions
+        # max instruction space is 4 bits for each: alu and non-alu
+        # *** LS8 doesn't support this structure ***
+        # self.std = [0] * 16
+        # self.alu = [0] * 16
+        self.ops = [0] * 256
+
         self.iset = Instructions(self)
-        self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
+        # self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
         for key in opcodes:
-            idx = opcodes[key] & 0b00111111
-            self.inst[idx] = getattr(self.iset, key.lower(), 0)
+            self.ops[opcodes[key]] = getattr(self.iset, key.lower(), 0)
+
+        # for key in opcodes:
+        #     opcode = opcodes[key]
+        #     instruction_type = opcode & 0b00100000
+        #     idx = opcode & 0b00001111
+        #     if instruction_type == 0:   # STD
+        #         self.std[idx] = getattr(self.iset, key.lower(), 0)
+        #         print("STD:",key, self.std[idx])
+        #     else:                       # ALU
+        #         self.alu[idx] = getattr(self.iset, key.lower(), 0)
+        #         # print("ALU:", key, self.alu[idx])
+
+        # print("STD:", self.std)
+        # # print("ALU:", self.alu)
+        # print("HLD:", self.std[1])
+
+
 
     def load(self, program = None, second="Hello"):
         """Load a program into memory."""
@@ -61,14 +84,14 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
-    def alu(self, op, reg_a, reg_b):
-        """ALU operations."""
+    # def alu(self, op, reg_a, reg_b):
+    #     """ALU operations."""
 
-        if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
-        else:
-            raise Exception("Unsupported ALU operation")
+    #     if op == "ADD":
+    #         self.reg[reg_a] += self.reg[reg_b]
+    #     #elif op == "SUB": etc
+    #     else:
+    #         raise Exception("Unsupported ALU operation")
 
     def trace(self, location="not set"):
         """
@@ -106,38 +129,29 @@ class CPU:
             # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
             self.trace("If Start")
 
+            # build the arguments array based on the top 2 bits
             args = []
             for i in range((self.ir >> 6)):
                 args.append(self.ram_read(self.pc+1+i))
 
-            if self.inst[(self.ir & 0b00111111)]:
-                self.inst[(self.ir & 0b00111111)](*args)
+            # call the standard instruction passing it the args array
+            # possibly shorten mask to 0b1111 as leading zeros are irrelevant
+            if self.ops[self.ir]:
+                self.ops[self.ir](*args)
 
-            # if self.ir == HLT:
-            #     print("HALT called! Exiting...")
-            #     break
-
-            # elif self.ir == opcodes['LDI']:
-                # not ideal; should only be read into general purpose registers if needed
-                # do the ram reading here ??
-                # self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
-
-            # elif self.ir == opcodes['MUL']:
-            #     self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] * self.reg[self.ram_read(self.pc+2)]
-
-            # elif self.ir == opcodes['PRN']:
-            #     print(self.reg[self.ram_read(self.pc+1)])
-
-            # elif self.ir == opcodes['NOP']:
-            #     print("NOP Encountered. Skipping...")
-
+            # come here if instruction not found / not defined
             else:
-                print(self.ir)
-                print(self.inst)
-                print("Unknown opcode")
+                # print(self.ir)
+                # print(self.std)
+                print("Unknown opcode:", self.ir)
+                print("pc:", self.pc)
                 break
 
-            self.pc += (((self.ir & 0b11000000) >> 6) + 1) & 0b11111111
+            # increment the program counter (PC):
+            # 1. IF 5th bit is 1 (determines if instruction itself sets the PC)
+            # 2. based on the size of the args array
+            if (self.ir & 0b00010000) == 0:  # 5th bit is 1 if instruction sets the PC
+                self.pc = (self.pc + ((self.ir  >> 6) + 1)) & 0b11111111
 
 
     def ram_read(self, address = None):
