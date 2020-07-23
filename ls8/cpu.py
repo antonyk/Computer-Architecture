@@ -5,7 +5,7 @@ CPU functionality.
 
 import sys
 import ops
-from ops import *
+# from ops import *
 # from reg import *
 # import reg
 
@@ -16,7 +16,7 @@ class CPU:
     def __init__(self):
         # Internal Registers
         self.pc     = 0b00000000
-        self.ir     = NOP
+        self.ir     = ops.NOP
         self.mar    = 0b00000000
         self.mdr    = 0b00000000
         self.fl     = 0b00000000  # 00000LGE - only last 3 bits matter
@@ -29,9 +29,9 @@ class CPU:
 
         # Instructions
         self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
-        for key in ops_table:
-            idx = ops_table[key] & 0b00111111
-            self.inst[idx] = key.lower()
+        for key in ops.opcodes:
+            idx = ops.opcodes[key] & 0b00111111
+            self.inst[idx] = getattr(ops, key.lower(), 0)
 
     def load(self, program = None, second="Hello"):
         """Load a program into memory."""
@@ -104,28 +104,27 @@ class CPU:
             for i in range(((self.ir & 0b11000000) >> 6)):
                 operands.append(self.ram_read(self.pc+1+i))
             
-            if self.ir == HLT and self.inst[self.ir]:  # optional error checking
-                print(operands)
+            if self.ir == ops.HLT and self.inst[self.ir]:  # optional error checking
+                # print(operands)
                 print(self.inst[self.ir])
-                getattr(ops, self.inst[self.ir])(*operands)
-                # self.inst[self.ir](*operands)
+                self.inst[self.ir](*operands)
 
             # if self.ir == HLT:
             #     print("HALT called! Exiting...")
             #     break
 
-            elif self.ir == LDI:
+            elif self.ir == ops.LDI:
                 # not ideal; should only be read into general purpose registers if needed
                 # do the ram reading here ??
                 self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
 
-            elif self.ir == MUL:
+            elif self.ir == ops.MUL:
                 self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] * self.reg[self.ram_read(self.pc+2)]
 
-            elif self.ir == PRN:
+            elif self.ir == ops.PRN:
                 print(self.reg[self.ram_read(self.pc+1)])
 
-            elif self.ir == NOP:
+            elif self.ir == ops.NOP:
                 print("NOP Encountered. Skipping...")
 
             else:
@@ -149,6 +148,7 @@ class CPU:
             self.mdr = value
 
         self.ram[self.mar] = self.mdr
+
 
 
 if __name__ == "__main__":

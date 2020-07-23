@@ -4,7 +4,7 @@ OPCODES (Instructions)
 ----------------------
 """
 
-ops_table = {
+opcodes = {
   # """
   # 1. Basic
   # """
@@ -593,13 +593,13 @@ END OPCODE TABLE
 
 if __name__ == "__main__":
 
-  opcodes = [0] * 64
+  instructions = [0] * 64
 
-  for key in ops_table:
-    idx = ops_table[key] & 0b00111111
-    opcodes[idx] = key.lower()
+  for key in opcodes:
+    idx = opcodes[key] & 0b00111111
+    instructions[idx] = key.lower()
 
   # print(ops_table)
-  print(opcodes)
+  print(instructions)
 
 
