@@ -407,6 +407,9 @@ class Instructions():
   # 00010001
   # 11
   RET         = 0b00010001
+  def handle_RET(self):
+    self.cpu.pc = self.cpu.ram_read(self.cpu.get_sp())
+    self.cpu.inc_sp()
 
   # POP register
   # Pop the value at the top of the stack into the given register.
