@@ -350,8 +350,11 @@ class Instructions():
   # 01010000 00000rrr
   # 50 0r
   CALL        = 0b01010000
-  # def call(self, r1):
-  #   pass
+  def handle_CALL(self, r1):
+    self.push_helper(self.cpu.pc+1)
+    # self.cpu.dec_sp()
+    # self.cpu.ram_write(self.cpu.get_sp(), self.cpu.pc+1)
+    self.cpu.pc = self.cpu.reg[r1]
 
   """
   2. Memory Read/Write
@@ -397,8 +400,9 @@ class Instructions():
   # 45 0r
   PUSH        = 0b01000101
   def handle_PUSH(self, r1):
-    self.cpu.dec_sp()
-    self.cpu.ram_write(self.cpu.get_sp(), self.cpu.reg[r1])
+    self.push_helper(self.cpu.reg[r1])
+    # self.cpu.dec_sp()
+    # self.cpu.ram_write(self.cpu.get_sp(), self.cpu.reg[r1])
 
   # RET
   # Return from subroutine.
@@ -408,8 +412,9 @@ class Instructions():
   # 11
   RET         = 0b00010001
   def handle_RET(self):
-    self.cpu.pc = self.cpu.ram_read(self.cpu.get_sp())
-    self.cpu.inc_sp()
+    # self.cpu.pc = self.cpu.ram_read(self.cpu.get_sp())
+    # self.cpu.inc_sp()
+    self.cpu.pc = self.pop_helper()
 
   # POP register
   # Pop the value at the top of the stack into the given register.
@@ -420,8 +425,18 @@ class Instructions():
   # 46 0r
   POP         = 0b01000110
   def handle_POP(self, r1):
-    self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
+    # self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
+    # self.cpu.inc_sp()
+    self.cpu.reg[r1] = self.pop_helper()
+
+  def push_helper(self, value):
+    self.cpu.dec_sp()
+    self.cpu.ram_write(self.cpu.get_sp(), value)
+
+  def pop_helper(self):
+    value = self.cpu.ram_read(self.cpu.get_sp())
     self.cpu.inc_sp()
+    return value
 
   """
   4. Jump & Conditional Jump
