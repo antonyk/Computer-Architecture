@@ -16,20 +16,33 @@ class CPU:
     def __init__(self):
         # Internal Registers
         self.pc     = 0b00000000
-        self.ir     = NOP
+        self.ir     = opcodes['NOP']
         self.mar    = 0b00000000
         self.mdr    = 0b00000000
         self.fl     = 0b00000000  # 00000LGE - only last 3 bits matter
+        # self.op1    = 0b00000000
+        # self.op2    = 0b00000000
+
+        # Operands = []
 
         # General Purpose Registers
         self.reg = [0] * 8  # this is the CPU's register
+        self.reg[7] = 0xf4
 
         # Memory
         self.ram = [0] * 265 # size of the computer's memory
 
+        # Instructions
+        self.iset = Instructions(self)
+        self.inst = [0] * 64 # max number of instructions, based on 6-bit binary
+        for key in opcodes:
+            idx = opcodes[key] & 0b00111111
+            self.inst[idx] = getattr(self.iset, key.lower(), 0)
 
-    def load(self, program = None):
+    def load(self, program = None, second="Hello"):
         """Load a program into memory."""
+
+        # print(second)
 
         if program == None:
             # Use hardcoded program:
@@ -47,7 +60,6 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -94,29 +106,38 @@ class CPU:
             # print(f"PRE: {self.ir} (self.ir), {LDI} (LDI)")
             self.trace("If Start")
 
-            if self.ir == HLT:
-                print("HALT called! Exiting...")
-                break
+            args = []
+            for i in range((self.ir >> 6)):
+                args.append(self.ram_read(self.pc+1+i))
 
-            elif self.ir == LDI:
+            if self.inst[(self.ir & 0b00111111)]:
+                self.inst[(self.ir & 0b00111111)](*args)
+
+            # if self.ir == HLT:
+            #     print("HALT called! Exiting...")
+            #     break
+
+            # elif self.ir == opcodes['LDI']:
                 # not ideal; should only be read into general purpose registers if needed
                 # do the ram reading here ??
-                self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
+                # self.reg[self.ram_read(self.pc+1)] = self.ram_read(self.pc+2)
 
-            elif self.ir == MUL:
-                self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] + self.reg[self.ram_read(self.pc+2)]
+            # elif self.ir == opcodes['MUL']:
+            #     self.reg[self.ram_read(self.pc+1)] = self.reg[self.ram_read(self.pc+1)] * self.reg[self.ram_read(self.pc+2)]
 
-            elif self.ir == PRN:
-                print(self.reg[self.ram_read(self.pc+1)])
+            # elif self.ir == opcodes['PRN']:
+            #     print(self.reg[self.ram_read(self.pc+1)])
 
-            elif self.ir == NOP:
-                print("NOP Encountered. Skipping...")
+            # elif self.ir == opcodes['NOP']:
+            #     print("NOP Encountered. Skipping...")
 
             else:
+                print(self.ir)
+                print(self.inst)
                 print("Unknown opcode")
                 break
 
-            self.pc += ((self.ir & 0b11000000) >> 6) + 1
+            self.pc += (((self.ir & 0b11000000) >> 6) + 1) & 0b11111111
 
 
     def ram_read(self, address = None):
@@ -134,6 +155,15 @@ class CPU:
 
         self.ram[self.mar] = self.mdr
 
+    def get_sp(self):
+        return self.reg[7]
+    
+    def inc_sp(self):
+        self.reg[7] = (self.reg[7] + 1) & 0xff
+
+    def dec_sp(self):
+        self.reg[7] = (self.reg[7] - 1) & 0xff
+
 
 if __name__ == "__main__":
     cpu = CPU()
@@ -145,4 +175,3 @@ if __name__ == "__main__":
 
     cpu.ram_write()
     print(cpu.ram[3])
-

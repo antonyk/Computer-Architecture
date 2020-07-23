@@ -50,7 +50,7 @@ if filename:
       for line in f:
         line = line.strip()
         line = line.split("#", 1)[0]
-        print(repr(line))
+        # print(repr(line))
         if address < len(memory):
           try:
             line = int(line, base) # take the base as an input
@@ -62,7 +62,7 @@ if filename:
           print("MEMORY OVERFLOW. Stopping Load")
           break
 
-    print(memory)
+    # print(memory)
     # sys.exit(0)
     cpu.load(memory)
 
@@ -71,9 +71,7 @@ if filename:
     sys.exit(1)
 
 else:
-  cpu.load()
+  cpu.load(second="Hello TJ!")
 
 
 cpu.run()
-
-
