@@ -444,7 +444,6 @@ class Instructions():
   # 54 0r
   JMP         = 0b01010100
   def handle_JMP(self, r1):
-    # print("jumping to address in", r1, self.cpu.reg[r1])
     self.cpu.pc = self.cpu.reg[r1]
 
   # JEQ register
@@ -455,10 +454,8 @@ class Instructions():
   JEQ         = 0b01010101
   def handle_JEQ(self, r1):
     if (self.cpu.fl & 0b00000001):
-      # print("JEQ: equal -> jumping to address in", r1, self.cpu.reg[r1])
       self.cpu.pc = self.cpu.reg[r1]
     else:
-      # print("JEQ: not equal; advancing pc normally")
       self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JNE register
@@ -470,10 +467,8 @@ class Instructions():
   def handle_JNE(self, r1):
     if (self.cpu.fl & 0b00000001):
       self.cpu.pc = (self.cpu.pc + 2) & 0xff
-      # print("JNE: equal -> advancing pc normally")
     else:
       self.cpu.pc = self.cpu.reg[r1]
-      # print("JNE: not equal -> jumping to address in", r1, self.cpu.pc)
 
   # JGE register
   # If greater-than flag or equal flag is set (true), jump to the address stored in the given register.
