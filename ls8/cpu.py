@@ -8,7 +8,10 @@ import sys
 from ops import *
 # from reg import *
 # import reg
+# from datetime import datetime
+import datetime
 
+# TIMER_INTERRUPT = 0b00000001
 
 class CPU:
     """Main CPU class."""
@@ -57,6 +60,7 @@ class CPU:
         # # print("ALU:", self.alu)
         # print("HLD:", self.std[1])
 
+        self.allow_interrupts = False
 
 
     def load(self, program = None, second="Hello"):
@@ -114,9 +118,44 @@ class CPU:
 
         print()
 
+    def load_state_to_stack(self):
+        # push PC to stack
+        self.SP -= 1
+        self.ram_write(self.SP, self.pc)
+
+        # push FL to stack
+        self.SP -= 1
+        self.ram_write(self.SP, self.fl)
+
+        # push R0-R6 to stack in order
+        for i in range(7):
+            self.SP -= 1
+            self.ram_write(self.SP, self.reg[i])
+
+
     def run(self):
         # running = True  # maybe use break to halt??
+        start_time = datetime.datetime.now()
         while True:
+            # set Timer Interrupt's value (is it ON/OFF?)
+            if (datetime.datetime.now() - start_time).total_seconds() > 1:
+                self.IS = self.IS | 0b00000001  # ensure the ZERO bit is True
+
+            if self.allow_interrupts and self.pc.IS:
+                # get requested interrupts
+                maskedInterrupts = self.pc.IS & self.pc.IM
+                for i in range(8):
+                    if ((maskedInterrupts >>  i) & 0b00000001):
+                        self.allow_interrupts = False
+                        # clear current interrupt (IS) bit 
+                        # mask = 0b1 << i - 7
+                        # self.IS = self.IS
+
+                        self.load_state_to_stack()
+
+                        # set the PC with the address in F8 for timer
+
+
             # self.trace("Loop Start")
             self.ir = self.ram_read(self.pc)
             # self.reg[2] = self.ram_read(self.pc+1)
@@ -190,31 +229,11 @@ class CPU:
         self.reg[5] = (value) & 0xff
 
 
-    # def get_sp(self):
-    #     return self.reg[7]
-    
-    # def inc_sp(self):
-    #     self.reg[7] = (self.reg[7] + 1) & 0xff
-
-    # def dec_sp(self):
-    #     self.reg[7] = (self.reg[7] - 1) & 0xff
-
-    def get_im(self):
-        pass
-
-    def IM(self, value = None):
-        if value:
-            self.reg[5]
-        return self.reg[5]
-
 
 if __name__ == "__main__":
     cpu = CPU()
     print(len(cpu.ram))
 
-    # test
-    # self.MAR = self.reg[3]
-    # self.MDR = self.reg[4]
 
     cpu.ram_write()
     print(cpu.ram[3])

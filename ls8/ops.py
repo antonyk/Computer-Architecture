@@ -325,9 +325,10 @@ class Instructions():
   # 01010010 00000rrr
   # 52 0r
   INT         = 0b01010010
-  # def handle_INT(self, r1):
-  #   self.cpu.
+  def handle_INT(self, r1):
+    # self.cpu.IS
 
+    pass
 
   # IRET
   # Return from an interrupt handler.
@@ -443,6 +444,7 @@ class Instructions():
   # 54 0r
   JMP         = 0b01010100
   def handle_JMP(self, r1):
+    # print("jumping to address in", r1, self.cpu.reg[r1])
     self.cpu.pc = self.cpu.reg[r1]
 
   # JEQ register
@@ -453,7 +455,11 @@ class Instructions():
   JEQ         = 0b01010101
   def handle_JEQ(self, r1):
     if (self.cpu.fl & 0b00000001):
+      # print("JEQ: equal -> jumping to address in", r1, self.cpu.reg[r1])
       self.cpu.pc = self.cpu.reg[r1]
+    else:
+      # print("JEQ: not equal; advancing pc normally")
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JNE register
   # If E flag is clear (false, 0), jump to the address stored in the given register.
@@ -462,8 +468,12 @@ class Instructions():
   # 56 0r
   JNE         = 0b01010110
   def handle_JNE(self, r1):
-    if not (self.cpu.fl & 0b00000001):
+    if (self.cpu.fl & 0b00000001):
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
+      # print("JNE: equal -> advancing pc normally")
+    else:
       self.cpu.pc = self.cpu.reg[r1]
+      # print("JNE: not equal -> jumping to address in", r1, self.cpu.pc)
 
   # JGE register
   # If greater-than flag or equal flag is set (true), jump to the address stored in the given register.
@@ -473,6 +483,8 @@ class Instructions():
   def handle_JGE(self, r1):
     if (self.cpu.fl & 0b00000011):
       self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JGT register
   # If greater-than flag is set (true), jump to the address stored in the given register.
@@ -483,6 +495,8 @@ class Instructions():
   def handle_JGT(self, r1):
     if (self.cpu.fl & 0b00000010):
       self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JLE register
   # If less-than flag or equal flag is set (true), jump to the address stored in the given register.
@@ -492,6 +506,8 @@ class Instructions():
   def handle_JLE(self, r1):
     if (self.cpu.fl & 0b00000101):
       self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JLT register
   # If less-than flag is set (true), jump to the address stored in the given register.
@@ -502,6 +518,8 @@ class Instructions():
   def handle_JLT(self, r1):
     if (self.cpu.fl & 0b00000100):
       self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   """
   I/O Instructions
@@ -539,6 +557,8 @@ class Instructions():
   def handle_ADD(self, r1, r2):
     self.cpu.reg[r1] = (self.cpu.reg[r1] + self.cpu.reg[r2]) & 0xff
 
+  # ADDI        = 0b10101001
+
   # This is an instruction handled by the ALU.
   # AND registerA registerB
   # Bitwise-AND the values in registerA and registerB, then store the result in registerA.
@@ -562,11 +582,17 @@ class Instructions():
   def handle_CMP(self, r1, r2):
     # reset
     self.cpu.fl = self.cpu.fl & 0b00000000
-    if r1 < r2:
+    operand1 = self.cpu.reg[r1]
+    operand2 = self.cpu.reg[r2]
+
+    if operand1 < operand2:
+      print("CMP: less")
       self.cpu.fl = self.cpu.fl | 0b00000100
-    elif r1 > r2:
+    elif operand1 < operand2:
+      print("CMP: greater")
       self.cpu.fl = self.cpu.fl | 0b00000010
     else:
+      print("CMP: equal")
       self.cpu.fl = self.cpu.fl | 0b00000001
 
   # This is an instruction handled by the ALU.
