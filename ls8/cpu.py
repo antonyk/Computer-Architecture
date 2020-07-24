@@ -23,12 +23,9 @@ class CPU:
         # self.op1    = 0b00000000
         # self.op2    = 0b00000000
 
-        # Operands = []
-
         # General Purpose Registers
         self.reg = [0] * 8  # this is the CPU's register
         self.reg[7] = 0xf4
-
 
         # Memory
         self.ram = [0] * 265 # size of the computer's memory
@@ -170,14 +167,45 @@ class CPU:
 
         self.ram[self.mar] = self.mdr
 
-    def get_sp(self):
-        return self.reg[7]
-    
-    def inc_sp(self):
-        self.reg[7] = (self.reg[7] + 1) & 0xff
 
-    def dec_sp(self):
-        self.reg[7] = (self.reg[7] - 1) & 0xff
+    @property
+    def SP(self):
+        return self.reg[7]
+    @SP.setter
+    def SP(self, value):
+        self.reg[7] = (value) & 0xff
+
+    @property
+    def IS(self):
+        return self.reg[6]
+    @IS.setter
+    def IS(self, value):
+        self.reg[6] = (value) & 0xff
+
+    @property
+    def IM(self):
+        return self.reg[5]
+    @IM.setter
+    def IM(self, value):
+        self.reg[5] = (value) & 0xff
+
+
+    # def get_sp(self):
+    #     return self.reg[7]
+    
+    # def inc_sp(self):
+    #     self.reg[7] = (self.reg[7] + 1) & 0xff
+
+    # def dec_sp(self):
+    #     self.reg[7] = (self.reg[7] - 1) & 0xff
+
+    def get_im(self):
+        pass
+
+    def IM(self, value = None):
+        if value:
+            self.reg[5]
+        return self.reg[5]
 
 
 if __name__ == "__main__":

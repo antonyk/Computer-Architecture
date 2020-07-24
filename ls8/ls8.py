@@ -37,8 +37,7 @@ print("CLI ARGS:", cliargs)
 
 cpu = CPU()
 
-
-filename = cliargs.get('file', None)
+filename = cliargs.get('file', None) # 'ls8/examples/call.ls8')
 base = cliargs.get('base', 2)  # default base to 2
 
 if filename:

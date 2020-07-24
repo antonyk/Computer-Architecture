@@ -325,8 +325,9 @@ class Instructions():
   # 01010010 00000rrr
   # 52 0r
   INT         = 0b01010010
-  # def int(self, r1):
-  #   pass
+  # def handle_INT(self, r1):
+  #   self.cpu.
+
 
   # IRET
   # Return from an interrupt handler.
@@ -351,9 +352,7 @@ class Instructions():
   # 50 0r
   CALL        = 0b01010000
   def handle_CALL(self, r1):
-    self.push_helper(self.cpu.pc+1)
-    # self.cpu.dec_sp()
-    # self.cpu.ram_write(self.cpu.get_sp(), self.cpu.pc+1)
+    self.push_helper(self.cpu.pc+2)
     self.cpu.pc = self.cpu.reg[r1]
 
   """
@@ -401,8 +400,6 @@ class Instructions():
   PUSH        = 0b01000101
   def handle_PUSH(self, r1):
     self.push_helper(self.cpu.reg[r1])
-    # self.cpu.dec_sp()
-    # self.cpu.ram_write(self.cpu.get_sp(), self.cpu.reg[r1])
 
   # RET
   # Return from subroutine.
@@ -412,8 +409,6 @@ class Instructions():
   # 11
   RET         = 0b00010001
   def handle_RET(self):
-    # self.cpu.pc = self.cpu.ram_read(self.cpu.get_sp())
-    # self.cpu.inc_sp()
     self.cpu.pc = self.pop_helper()
 
   # POP register
@@ -425,17 +420,16 @@ class Instructions():
   # 46 0r
   POP         = 0b01000110
   def handle_POP(self, r1):
-    # self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
-    # self.cpu.inc_sp()
     self.cpu.reg[r1] = self.pop_helper()
 
+  # STACK HELPER FUNCTIONS
   def push_helper(self, value):
-    self.cpu.dec_sp()
-    self.cpu.ram_write(self.cpu.get_sp(), value)
+    self.cpu.SP -= 1
+    self.cpu.ram_write(self.cpu.SP, value)
 
   def pop_helper(self):
-    value = self.cpu.ram_read(self.cpu.get_sp())
-    self.cpu.inc_sp()
+    value = self.cpu.ram_read(self.cpu.SP)
+    self.cpu.SP += 1
     return value
 
   """
@@ -448,6 +442,8 @@ class Instructions():
   # 01010100 00000rrr
   # 54 0r
   JMP         = 0b01010100
+  def handle_JMP(self, r1):
+    self.cpu.pc = self.cpu.reg[r1]
 
   # JEQ register
   # If equal flag is set (true), jump to the address stored in the given register.
@@ -455,6 +451,9 @@ class Instructions():
   # 01010101 00000rrr
   # 55 0r
   JEQ         = 0b01010101
+  def handle_JEQ(self, r1):
+    if (self.cpu.fl & 0b00000001):
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JNE register
   # If E flag is clear (false, 0), jump to the address stored in the given register.
@@ -462,12 +461,18 @@ class Instructions():
   # 01010110 00000rrr
   # 56 0r
   JNE         = 0b01010110
+  def handle_JNE(self, r1):
+    if not (self.cpu.fl & 0b00000001):
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JGE register
   # If greater-than flag or equal flag is set (true), jump to the address stored in the given register.
   # 01011010 00000rrr
   # 5A 0r
   JGE         = 0b01011010
+  def handle_JGE(self, r1):
+    if (self.cpu.fl & 0b00000011):
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JGT register
   # If greater-than flag is set (true), jump to the address stored in the given register.
@@ -475,12 +480,18 @@ class Instructions():
   # 01010111 00000rrr
   # 57 0r
   JGT         = 0b01010111
+  def handle_JGT(self, r1):
+    if (self.cpu.fl & 0b00000010):
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JLE register
   # If less-than flag or equal flag is set (true), jump to the address stored in the given register.
   # 01011001 00000rrr
   # 59 0r
   JLE         = 0b01011001
+  def handle_JLE(self, r1):
+    if (self.cpu.fl & 0b00000101):
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JLT register
   # If less-than flag is set (true), jump to the address stored in the given register.
@@ -488,6 +499,9 @@ class Instructions():
   # 01011000 00000rrr
   # 58 0r
   JLT         = 0b01011000
+  def handle_JLT(self, r1):
+    if (self.cpu.fl & 0b00000100):
+      self.cpu.pc = self.cpu.reg[r1]
 
   """
   I/O Instructions
@@ -545,6 +559,15 @@ class Instructions():
   # 10100111 00000aaa 00000bbb
   # A7 0a 0b
   CMP         = 0b10100111
+  def handle_CMP(self, r1, r2):
+    # reset
+    self.cpu.fl = self.cpu.fl & 0b00000000
+    if r1 < r2:
+      self.cpu.fl = self.cpu.fl | 0b00000100
+    elif r1 > r2:
+      self.cpu.fl = self.cpu.fl | 0b00000010
+    else:
+      self.cpu.fl = self.cpu.fl | 0b00000001
 
   # This is an instruction handled by the ALU.
   # DEC register
