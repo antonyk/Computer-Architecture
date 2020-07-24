@@ -304,7 +304,7 @@ class Instructions():
   # 00000000
   # 00
   NOP         = 0b00000000
-  def nop(self):
+  def handle_NOP(self):
     print("NOP Encountered. Skipping...")
 
   # HLT
@@ -313,7 +313,7 @@ class Instructions():
   # 00000001 
   # 01
   HLT         = 0b00000001
-  def hlt(self):
+  def handle_HLT(self):
     # print("HALT called! Exiting...")
     import sys
     sys.exit("HALT called! BRANCH Exiting...")
@@ -325,7 +325,9 @@ class Instructions():
   # 01010010 00000rrr
   # 52 0r
   INT         = 0b01010010
-  def int(self, r1):
+  def handle_INT(self, r1):
+    # self.cpu.IS
+
     pass
 
   # IRET
@@ -339,8 +341,8 @@ class Instructions():
   # 00010011
   # 13
   IRET        = 0b00010011
-  def iret(self):
-    pass
+  # def iret(self):
+  #   pass
 
   # CALL register
   # Calls a subroutine (function) at the address stored in the register.
@@ -350,8 +352,9 @@ class Instructions():
   # 01010000 00000rrr
   # 50 0r
   CALL        = 0b01010000
-  def call(self, r1):
-    pass
+  def handle_CALL(self, r1):
+    self.push_helper(self.cpu.pc+2)
+    self.cpu.pc = self.cpu.reg[r1]
 
   """
   2. Memory Read/Write
@@ -363,8 +366,8 @@ class Instructions():
   # 10000011 00000aaa 00000bbb
   # 83 0a 0b
   LD          = 0b10000011
-  def ld(self, r1, r2):
-    pass
+  def handle_LD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.reg[r2])
 
   # LDI register immediate
   # Set the value of a register to an integer.
@@ -372,12 +375,8 @@ class Instructions():
   # 10000010 00000rrr iiiiiiii
   # 82 0r ii
   LDI         = 0b10000010
-  def ldi(self, r1, r2):
-    # print("from ops; operands: ", args)
-    # self.cpu.reg[args[0]] = args[1]
-    # print("LDI arguments: ", r1, r2)
+  def handle_LDI(self, r1, r2):
     self.cpu.reg[r1] = r2
-
 
   # ST registerA registerB
   # Store value in registerB in the address stored in registerA.
@@ -386,8 +385,8 @@ class Instructions():
   # 10000100 00000aaa 00000bbb
   # 84 0a 0b
   ST          = 0b10000100
-  def st(self, r1, r2):
-    pass
+  def handle_ST(self, r1, r2):
+    self.cpu.ram_write(self.cpu.reg[r1], self.cpu.reg[r2])
 
   """
   3. Stack Manipulation
@@ -400,10 +399,8 @@ class Instructions():
   # 01000101 00000rrr
   # 45 0r
   PUSH        = 0b01000101
-  def push(self, r1):
-    self.cpu.dec_sp()
-    # self.cpu.reg[7] = (self.cpu.reg[7] - 1) & 0xff
-    self.cpu.ram_write(self.cpu.get_sp(), r1)
+  def handle_PUSH(self, r1):
+    self.push_helper(self.cpu.reg[r1])
 
   # RET
   # Return from subroutine.
@@ -412,6 +409,8 @@ class Instructions():
   # 00010001
   # 11
   RET         = 0b00010001
+  def handle_RET(self):
+    self.cpu.pc = self.pop_helper()
 
   # POP register
   # Pop the value at the top of the stack into the given register.
@@ -421,10 +420,18 @@ class Instructions():
   # 01000110 00000rrr
   # 46 0r
   POP         = 0b01000110
-  def pop(self, r1):
-    self.cpu.reg[r1] = self.cpu.ram_read(self.cpu.get_sp())
-    self.cpu.inc_sp()
-    # self.cpu.reg[7] = (self.cpu.reg[7] + 1) & 0xff
+  def handle_POP(self, r1):
+    self.cpu.reg[r1] = self.pop_helper()
+
+  # STACK HELPER FUNCTIONS
+  def push_helper(self, value):
+    self.cpu.SP -= 1
+    self.cpu.ram_write(self.cpu.SP, value)
+
+  def pop_helper(self):
+    value = self.cpu.ram_read(self.cpu.SP)
+    self.cpu.SP += 1
+    return value
 
   """
   4. Jump & Conditional Jump
@@ -436,6 +443,8 @@ class Instructions():
   # 01010100 00000rrr
   # 54 0r
   JMP         = 0b01010100
+  def handle_JMP(self, r1):
+    self.cpu.pc = self.cpu.reg[r1]
 
   # JEQ register
   # If equal flag is set (true), jump to the address stored in the given register.
@@ -443,6 +452,11 @@ class Instructions():
   # 01010101 00000rrr
   # 55 0r
   JEQ         = 0b01010101
+  def handle_JEQ(self, r1):
+    if (self.cpu.fl & 0b00000001):
+      self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JNE register
   # If E flag is clear (false, 0), jump to the address stored in the given register.
@@ -450,12 +464,22 @@ class Instructions():
   # 01010110 00000rrr
   # 56 0r
   JNE         = 0b01010110
+  def handle_JNE(self, r1):
+    if (self.cpu.fl & 0b00000001):
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
+    else:
+      self.cpu.pc = self.cpu.reg[r1]
 
   # JGE register
   # If greater-than flag or equal flag is set (true), jump to the address stored in the given register.
   # 01011010 00000rrr
   # 5A 0r
   JGE         = 0b01011010
+  def handle_JGE(self, r1):
+    if (self.cpu.fl & 0b00000011):
+      self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JGT register
   # If greater-than flag is set (true), jump to the address stored in the given register.
@@ -463,12 +487,22 @@ class Instructions():
   # 01010111 00000rrr
   # 57 0r
   JGT         = 0b01010111
+  def handle_JGT(self, r1):
+    if (self.cpu.fl & 0b00000010):
+      self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JLE register
   # If less-than flag or equal flag is set (true), jump to the address stored in the given register.
   # 01011001 00000rrr
   # 59 0r
   JLE         = 0b01011001
+  def handle_JLE(self, r1):
+    if (self.cpu.fl & 0b00000101):
+      self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   # JLT register
   # If less-than flag is set (true), jump to the address stored in the given register.
@@ -476,6 +510,11 @@ class Instructions():
   # 01011000 00000rrr
   # 58 0r
   JLT         = 0b01011000
+  def handle_JLT(self, r1):
+    if (self.cpu.fl & 0b00000100):
+      self.cpu.pc = self.cpu.reg[r1]
+    else:
+      self.cpu.pc = (self.cpu.pc + 2) & 0xff
 
   """
   I/O Instructions
@@ -487,6 +526,8 @@ class Instructions():
   # 01001000 00000rrr
   # 48 0r
   PRA         = 0b01001000
+  def handle_PRA(self, r1):
+    print(chr(self.cpu.reg[r1]))
 
   # PRN register pseudo-instruction
   # Print numeric value stored in the given register.
@@ -495,7 +536,7 @@ class Instructions():
   # 01000111 00000rrr
   # 47 0r
   PRN         = 0b01000111
-  def prn(self, r1):
+  def handle_PRN(self, r1):
     print(self.cpu.reg[r1])
 
   """
@@ -508,6 +549,10 @@ class Instructions():
   # 10100000 00000aaa 00000bbb
   # A0 0a 0b
   ADD         = 0b10100000
+  def handle_ADD(self, r1, r2):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + self.cpu.reg[r2]) & 0xff
+
+  # ADDI        = 0b10101001
 
   # This is an instruction handled by the ALU.
   # AND registerA registerB
@@ -516,6 +561,8 @@ class Instructions():
   # 10101000 00000aaa 00000bbb
   # A8 0a 0b
   AND         = 0b10101000
+  def handle_AND(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] & self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # CMP registerA registerB
@@ -527,6 +574,21 @@ class Instructions():
   # 10100111 00000aaa 00000bbb
   # A7 0a 0b
   CMP         = 0b10100111
+  def handle_CMP(self, r1, r2):
+    # reset
+    self.cpu.fl = self.cpu.fl & 0b00000000
+    operand1 = self.cpu.reg[r1]
+    operand2 = self.cpu.reg[r2]
+
+    if operand1 < operand2:
+      print("CMP: less")
+      self.cpu.fl = self.cpu.fl | 0b00000100
+    elif operand1 < operand2:
+      print("CMP: greater")
+      self.cpu.fl = self.cpu.fl | 0b00000010
+    else:
+      print("CMP: equal")
+      self.cpu.fl = self.cpu.fl | 0b00000001
 
   # This is an instruction handled by the ALU.
   # DEC register
@@ -535,6 +597,8 @@ class Instructions():
   # 01100110 00000rrr
   # 66 0r
   DEC         = 0b01100110
+  def handle_DEC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
 
   # This is an instruction handled by the ALU.
   # DIV registerA registerB
@@ -552,6 +616,8 @@ class Instructions():
   # 01100101 00000rrr
   # 65 0r
   INC         = 0b01100101
+  def handle_INC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
 
   # This is an instruction handled by the ALU.
   # MOD registerA registerB
@@ -561,6 +627,8 @@ class Instructions():
   # 10100100 00000aaa 00000bbb
   # A4 0a 0b
   MOD         = 0b10100100
+  def handle_MOD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] % self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # MUL registerA registerB
@@ -569,8 +637,8 @@ class Instructions():
   # 10100010 00000aaa 00000bbb
   # A2 0a 0b
   MUL         = 0b10100010
-  def mul(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] * self.cpu.reg[r2]
+  def handle_MUL(self, r1, r2):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] * self.cpu.reg[r2]) & 0xff
 
   # This is an instruction handled by the ALU.
   # NOT register
@@ -579,6 +647,8 @@ class Instructions():
   # 01101001 00000rrr
   # 69 0r
   NOT         = 0b01101001
+  def handle_NOT(self, r1):
+    self.cpu.reg[r1] = ~self.cpu.reg[r1]
 
   # This is an instruction handled by the ALU.
   # OR registerA registerB
@@ -587,18 +657,24 @@ class Instructions():
   # 10101010 00000aaa 00000bbb
   # AA 0a 0b
   OR          = 0b10101010
+  def handle_OR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] | self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # Shift the value in registerA left by the number of bits specified in registerB, filling the low bits with 0.
   # 10101100 00000aaa 00000bbb
   # AC 0a 0b
   SHL         = 0b10101100
+  def handle_SHL(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] << self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # Shift the value in registerA right by the number of bits specified in registerB, filling the high bits with 0.
   # 10101101 00000aaa 00000bbb
   # AD 0a 0b
   SHR         = 0b10101101
+  def handle_SHR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] >> self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # SUB registerA registerB
@@ -607,6 +683,8 @@ class Instructions():
   # 10100001 00000aaa 00000bbb
   # A1 0a 0b
   SUB         = 0b10100001
+  def handle_SUB(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] - self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # XOR registerA registerB
@@ -615,6 +693,9 @@ class Instructions():
   # 10101011 00000aaa 00000bbb
   # AB 0a 0b
   XOR         = 0b10101011
+  def handle_XOR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] ^ self.cpu.reg[r2]
+
 
   """
   END OPCODE TABLE 
