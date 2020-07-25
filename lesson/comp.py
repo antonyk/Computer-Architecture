@@ -89,6 +89,30 @@ while running:
     # pop
     pass
 
+
+  elif instruction == CALL:
+    # get address of next instruction
+    return_addr = pc + 2
+
+    # push that on the stack
+    register[SP] -= 1
+    address_to_push_to = register[SP]
+    memory[address_to_push_to] = return_addr
+
+    # set the pc to that subroutine address
+    reg_num = memory[pc + 1]
+    subroutine_addr = register[reg_num]
+
+    pc = subroutine_addr
+
+  elif instruction == RET:
+    address_to_pop_from = register[SP]
+    return_addr = memory[address_to_pop_from]
+    register[SP] += 1
+
+    pc = return_addr
+
+
   else:
     print(f"Unknown instruction: {instruction}")
 
