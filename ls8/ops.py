@@ -344,7 +344,7 @@ class Instructions():
   def handle_INT(self, r1):
     interrupt_bit = self.cpu.reg[r1] & 0b111 # 3 bits (8) is the max number of interrupts
     # set interrupt bit in IS to 1
-    self.cpu.IS = self.cpu.IS | (0b00000001 << interrupt_bit))
+    self.cpu.IS = self.cpu.IS | (0b00000001 << interrupt_bit)
     # set PC because instruction is the type that sets its PC
     self.cpu.pc += 2
 
@@ -670,13 +670,13 @@ class Instructions():
     operand2 = self.cpu.reg[r2]
 
     if operand1 < operand2:
-      print("CMP: less")
+      # print("CMP: less")
       self.cpu.fl = self.cpu.fl | 0b00000100
     elif operand1 < operand2:
-      print("CMP: greater")
+      # print("CMP: greater")
       self.cpu.fl = self.cpu.fl | 0b00000010
     else:
-      print("CMP: equal")
+      # print("CMP: equal")
       self.cpu.fl = self.cpu.fl | 0b00000001
 
   # This is an instruction handled by the ALU.
