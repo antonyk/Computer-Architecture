@@ -26,6 +26,11 @@ class CPU:
         # self.op1    = 0b00000000
         # self.op2    = 0b00000000
 
+        # Interrupt Vector Table
+        self.ivt = [0] * 8
+        for i in range(len(self.ivt)):
+            self.ivt[i] = 0xf8 + i
+
         # General Purpose Registers
         self.reg = [0] * 8  # this is the CPU's register
         self.reg[7] = 0xf4
@@ -60,7 +65,7 @@ class CPU:
         # # print("ALU:", self.alu)
         # print("HLD:", self.std[1])
 
-        self.allow_interrupts = False
+        self.allow_interrupts = True
 
 
     def load(self, program = None, second="Hello"):
@@ -118,7 +123,7 @@ class CPU:
 
         print()
 
-    def load_state_to_stack(self):
+    def push_state_to_stack(self):
         # push PC to stack
         self.SP -= 1
         self.ram_write(self.SP, self.pc)
@@ -127,11 +132,24 @@ class CPU:
         self.SP -= 1
         self.ram_write(self.SP, self.fl)
 
-        # push R0-R6 to stack in order
+        # push R0-R6 to stack in this order
         for i in range(7):
             self.SP -= 1
             self.ram_write(self.SP, self.reg[i])
 
+    def pop_state_from_stack(self):
+        # pop R6-R0 from stack in this order
+        for i in range(7):
+            self.reg[6-i] = self.ram_read(self.SP)
+            self.SP += 1
+
+        # pop FL from stack
+        self.fl = self.ram_read(self.SP)
+        self.SP += 1
+
+        # pop PC from stack
+        self.pc = self.ram_read(self.SP)
+        self.SP += 1
 
     def run(self):
         # running = True  # maybe use break to halt??
@@ -141,19 +159,22 @@ class CPU:
             if (datetime.datetime.now() - start_time).total_seconds() > 1:
                 self.IS = self.IS | 0b00000001  # ensure the ZERO bit is True
 
-            if self.allow_interrupts and self.pc.IS:
+            if self.allow_interrupts:
+                maskedInterrupts = self.IS & self.IM
                 # get requested interrupts
-                maskedInterrupts = self.pc.IS & self.pc.IM
-                for i in range(8):
-                    if ((maskedInterrupts >>  i) & 0b00000001):
-                        self.allow_interrupts = False
-                        # clear current interrupt (IS) bit 
-                        # mask = 0b1 << i - 7
-                        # self.IS = self.IS
-
-                        self.load_state_to_stack()
-
-                        # set the PC with the address in F8 for timer
+                if maskedInterrupts:
+                    for i in range(8):
+                        if ((maskedInterrupts >>  i) & 0b00000001):
+                            # disable further interrupts
+                            self.allow_interrupts = False
+                            # clear current interrupt (IS) bit
+                            self.IS = self.IS & (~(0b00000001 << i) & 0b11111111)
+                            if i == 0:
+                                start_time = datetime.datetime.now()
+                            # push current state onto the stack
+                            self.push_state_to_stack()
+                            # set the PC with the address in the interrupt vector
+                            self.pc = self.ram_read(self.ivt[i])
 
 
             # self.trace("Loop Start")

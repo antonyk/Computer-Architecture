@@ -327,7 +327,6 @@ class Instructions():
   INT         = 0b01010010
   def handle_INT(self, r1):
     # self.cpu.IS
-
     pass
 
   # IRET
@@ -341,8 +340,9 @@ class Instructions():
   # 00010011
   # 13
   IRET        = 0b00010011
-  # def iret(self):
-  #   pass
+  def handle_IRET(self):
+    self.cpu.pop_state_from_stack()
+    self.cpu.allow_interrupts = True
 
   # CALL register
   # Calls a subroutine (function) at the address stored in the register.
@@ -543,6 +543,28 @@ class Instructions():
   ALU Instructions
   """
   # This is an instruction handled by the ALU.
+  # INC register
+  # Increment (add 1 to) the value in the given register.
+  # Machine code:
+  # 01100101 00000rrr
+  # 65 0r
+  INC         = 0b01100101
+  def handle_INC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # DEC register
+  # Decrement (subtract 1 from) the value in the given register.
+  # Machine code:
+  # 01100110 00000rrr
+  # 66 0r
+  DEC         = 0b01100110
+  def handle_DEC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
+
+  # ADDI        = 0b10101001
+
+  # This is an instruction handled by the ALU.
   # ADD registerA registerB
   # Add the value in two registers and store the result in registerA.
   # Machine code:
@@ -552,17 +574,47 @@ class Instructions():
   def handle_ADD(self, r1, r2):
     self.cpu.reg[r1] = (self.cpu.reg[r1] + self.cpu.reg[r2]) & 0xff
 
-  # ADDI        = 0b10101001
+  # This is an instruction handled by the ALU.
+  # SUB registerA registerB
+  # Subtract the value in the second register from the first, storing the result in registerA.
+  # Machine code:
+  # 10100001 00000aaa 00000bbb
+  # A1 0a 0b
+  SUB         = 0b10100001
+  def handle_SUB(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] - self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
-  # AND registerA registerB
-  # Bitwise-AND the values in registerA and registerB, then store the result in registerA.
+  # MUL registerA registerB
+  # Multiply the values in two registers together and store the result in registerA.
   # Machine code:
-  # 10101000 00000aaa 00000bbb
-  # A8 0a 0b
-  AND         = 0b10101000
-  def handle_AND(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] & self.cpu.reg[r2]
+  # 10100010 00000aaa 00000bbb
+  # A2 0a 0b
+  MUL         = 0b10100010
+  def handle_MUL(self, r1, r2):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] * self.cpu.reg[r2]) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # DIV registerA registerB
+  # Divide the value in the first register by the value in the second, storing the result in registerA.
+  # If the value in the second register is 0, the system should print an error message and halt.
+  # Machine code:
+  # 10100011 00000aaa 00000bbb
+  # A3 0a 0b
+  DIV         = 0b10100011
+  def handle_DIV(self, r1, r2):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] // self.cpu.reg[r2]) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # MOD registerA registerB
+  # Divide the value in the first register by the value in the second, storing the remainder of the result in registerA.
+  # If the value in the second register is 0, the system should print an error message and halt.
+  # Machine code:
+  # 10100100 00000aaa 00000bbb
+  # A4 0a 0b
+  MOD         = 0b10100100
+  def handle_MOD(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] % self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # CMP registerA registerB
@@ -591,54 +643,24 @@ class Instructions():
       self.cpu.fl = self.cpu.fl | 0b00000001
 
   # This is an instruction handled by the ALU.
-  # DEC register
-  # Decrement (subtract 1 from) the value in the given register.
+  # AND registerA registerB
+  # Bitwise-AND the values in registerA and registerB, then store the result in registerA.
   # Machine code:
-  # 01100110 00000rrr
-  # 66 0r
-  DEC         = 0b01100110
-  def handle_DEC(self, r1):
-    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
+  # 10101000 00000aaa 00000bbb
+  # A8 0a 0b
+  AND         = 0b10101000
+  def handle_AND(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] & self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
-  # DIV registerA registerB
-  # Divide the value in the first register by the value in the second, storing the result in registerA.
-  # If the value in the second register is 0, the system should print an error message and halt.
+  # OR registerA registerB
+  # Perform a bitwise-OR between the values in registerA and registerB, storing the result in registerA.
   # Machine code:
-  # 10100011 00000aaa 00000bbb
-  # A3 0a 0b
-  DIV         = 0b10100011
-
-  # This is an instruction handled by the ALU.
-  # INC register
-  # Increment (add 1 to) the value in the given register.
-  # Machine code:
-  # 01100101 00000rrr
-  # 65 0r
-  INC         = 0b01100101
-  def handle_INC(self, r1):
-    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
-
-  # This is an instruction handled by the ALU.
-  # MOD registerA registerB
-  # Divide the value in the first register by the value in the second, storing the remainder of the result in registerA.
-  # If the value in the second register is 0, the system should print an error message and halt.
-  # Machine code:
-  # 10100100 00000aaa 00000bbb
-  # A4 0a 0b
-  MOD         = 0b10100100
-  def handle_MOD(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] % self.cpu.reg[r2]
-
-  # This is an instruction handled by the ALU.
-  # MUL registerA registerB
-  # Multiply the values in two registers together and store the result in registerA.
-  # Machine code:
-  # 10100010 00000aaa 00000bbb
-  # A2 0a 0b
-  MUL         = 0b10100010
-  def handle_MUL(self, r1, r2):
-    self.cpu.reg[r1] = (self.cpu.reg[r1] * self.cpu.reg[r2]) & 0xff
+  # 10101010 00000aaa 00000bbb
+  # AA 0a 0b
+  OR          = 0b10101010
+  def handle_OR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] | self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # NOT register
@@ -651,14 +673,14 @@ class Instructions():
     self.cpu.reg[r1] = ~self.cpu.reg[r1]
 
   # This is an instruction handled by the ALU.
-  # OR registerA registerB
-  # Perform a bitwise-OR between the values in registerA and registerB, storing the result in registerA.
+  # XOR registerA registerB
+  # Perform a bitwise-XOR between the values in registerA and registerB, storing the result in registerA.
   # Machine code:
-  # 10101010 00000aaa 00000bbb
-  # AA 0a 0b
-  OR          = 0b10101010
-  def handle_OR(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] | self.cpu.reg[r2]
+  # 10101011 00000aaa 00000bbb
+  # AB 0a 0b
+  XOR         = 0b10101011
+  def handle_XOR(self, r1, r2):
+    self.cpu.reg[r1] = self.cpu.reg[r1] ^ self.cpu.reg[r2]
 
   # This is an instruction handled by the ALU.
   # Shift the value in registerA left by the number of bits specified in registerB, filling the low bits with 0.
@@ -675,26 +697,6 @@ class Instructions():
   SHR         = 0b10101101
   def handle_SHR(self, r1, r2):
     self.cpu.reg[r1] = self.cpu.reg[r1] >> self.cpu.reg[r2]
-
-  # This is an instruction handled by the ALU.
-  # SUB registerA registerB
-  # Subtract the value in the second register from the first, storing the result in registerA.
-  # Machine code:
-  # 10100001 00000aaa 00000bbb
-  # A1 0a 0b
-  SUB         = 0b10100001
-  def handle_SUB(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] - self.cpu.reg[r2]
-
-  # This is an instruction handled by the ALU.
-  # XOR registerA registerB
-  # Perform a bitwise-XOR between the values in registerA and registerB, storing the result in registerA.
-  # Machine code:
-  # 10101011 00000aaa 00000bbb
-  # AB 0a 0b
-  XOR         = 0b10101011
-  def handle_XOR(self, r1, r2):
-    self.cpu.reg[r1] = self.cpu.reg[r1] ^ self.cpu.reg[r2]
 
 
   """
