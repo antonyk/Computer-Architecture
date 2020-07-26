@@ -290,6 +290,22 @@ opcodes = {
   # 10101011 00000aaa 00000bbb
   # AB 0a 0b
   'XOR'         : 0b10101011,
+
+  # This is an instruction handled by the ALU.
+  # ADDI register integer
+  # Add an immediate value to the register.
+  # Machine code:
+  # 10100101 00000rrr iiiiiiii
+  # A5 0r ii
+  'ADDI'        : 0b10100101,
+
+  # This is an instruction handled by the ALU.
+  # SUBI register integer
+  # Subtract an immediate value from the register.
+  # Machine code:
+  # 10101110 00000rrr iiiiiiii
+  # AE 0r ii
+  'SUBI'        : 0b10101110,
 }
 
 class Instructions():
@@ -326,8 +342,11 @@ class Instructions():
   # 52 0r
   INT         = 0b01010010
   def handle_INT(self, r1):
-    # self.cpu.IS
-    pass
+    interrupt_bit = self.cpu.reg[r1] & 0b111 # 3 bits (8) is the max number of interrupts
+    # set interrupt bit in IS to 1
+    self.cpu.IS = self.cpu.IS | (0b00000001 << interrupt_bit))
+    # set PC because instruction is the type that sets its PC
+    self.cpu.pc += 2
 
   # IRET
   # Return from an interrupt handler.
@@ -543,28 +562,6 @@ class Instructions():
   ALU Instructions
   """
   # This is an instruction handled by the ALU.
-  # INC register
-  # Increment (add 1 to) the value in the given register.
-  # Machine code:
-  # 01100101 00000rrr
-  # 65 0r
-  INC         = 0b01100101
-  def handle_INC(self, r1):
-    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
-
-  # This is an instruction handled by the ALU.
-  # DEC register
-  # Decrement (subtract 1 from) the value in the given register.
-  # Machine code:
-  # 01100110 00000rrr
-  # 66 0r
-  DEC         = 0b01100110
-  def handle_DEC(self, r1):
-    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
-
-  # ADDI        = 0b10101001
-
-  # This is an instruction handled by the ALU.
   # ADD registerA registerB
   # Add the value in two registers and store the result in registerA.
   # Machine code:
@@ -615,6 +612,46 @@ class Instructions():
   MOD         = 0b10100100
   def handle_MOD(self, r1, r2):
     self.cpu.reg[r1] = self.cpu.reg[r1] % self.cpu.reg[r2]
+
+  # This is an instruction handled by the ALU.
+  # INC register
+  # Increment (add 1 to) the value in the given register.
+  # Machine code:
+  # 01100101 00000rrr
+  # 65 0r
+  INC         = 0b01100101
+  def handle_INC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + 1) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # DEC register
+  # Decrement (subtract 1 from) the value in the given register.
+  # Machine code:
+  # 01100110 00000rrr
+  # 66 0r
+  DEC         = 0b01100110
+  def handle_DEC(self, r1):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] - 1) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # ADDI register immediate
+  # Add an immediate value to the register.
+  # Machine code:
+  # 10100101 00000rrr iiiiiiii
+  # A5 0r ii
+  ADDI        = 0b10100101
+  def handle_ADDI(self, r1, val):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] + val) & 0xff
+
+  # This is an instruction handled by the ALU.
+  # SUBI register immediate
+  # Subtract an immediate value from the register.
+  # Machine code:
+  # 10101110 00000rrr iiiiiiii
+  # AE 0r ii
+  SUBI        = 0b10101110
+  def handle_SUBI(self, r1, val):
+    self.cpu.reg[r1] = (self.cpu.reg[r1] - val) & 0xff
 
   # This is an instruction handled by the ALU.
   # CMP registerA registerB

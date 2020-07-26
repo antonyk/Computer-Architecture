@@ -168,7 +168,8 @@ class CPU:
                             # disable further interrupts
                             self.allow_interrupts = False
                             # clear current interrupt (IS) bit
-                            self.IS = self.IS & (~(0b00000001 << i) & 0b11111111)
+                            self.IS = self.IS & (~(0b00000001 << i))
+                            # special case for timer reset
                             if i == 0:
                                 start_time = datetime.datetime.now()
                             # push current state onto the stack

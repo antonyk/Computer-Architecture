@@ -668,3 +668,33 @@ Machine code:
 10101011 00000aaa 00000bbb
 AB 0a 0b
 ```
+
+## Additional instructions not part of original spec
+
+### ADDI
+
+*This is an instruction handled by the ALU.*
+
+`ADDI register immediate`
+
+Add an immediate value to the register.
+
+Machine code:
+```
+10100101 00000rrr iiiiiiii
+A5 0r ii
+```
+
+### SUBI
+
+*This is an instruction handled by the ALU.*
+
+`SUBI register immediate`
+
+Subtract an immediate value from the register.
+
+Machine code:
+```
+10101110 00000rrr iiiiiiii
+AE 0r ii
+```
