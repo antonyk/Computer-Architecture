@@ -37,7 +37,7 @@ print("CLI ARGS:", cliargs)
 
 cpu = CPU()
 
-filename = cliargs.get('file', 'ls8/examples/sctest.ls8')
+filename = cliargs.get('file', 'ls8/examples/interrupts.ls8')
 base = cliargs.get('base', 2)  # default base to 2
 
 if filename:
